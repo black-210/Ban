@@ -1,0 +1,47 @@
+[
+  {
+    "name": "constexpr",
+    "kind": "specifier",
+    "summary": "يطلب حساب التعبير أو الدالة بالكامل أثناء مرحلة الترجمة (Compile-time evaluation)",
+    "explanation": "يحدد أن قيمة المتغير أو ناتج الدالة يمكن حسابه أثناء ترجمة الكود بدلاً من تشغيله، مما يرفع أداء التطبيق إلى أقصى حد ويقلل وقت التشغيل واستهلاك الذاكرة.",
+    "whenToUse": "للجداول الحسابية، ثوابت الأقنعة (Bitmasks)، حساب الأبعاد، وحساب الدوال الرياضية البحتة.",
+    "syntax": "constexpr int square(int x) { return x * x; }\nconstexpr int S = square(5);",
+    "example": "constexpr double to_radians(double deg) {\n    return deg * 3.14159265358979323846 / 180.0;\n}\nconstexpr double RIGHT_ANGLE_RAD = to_radians(90.0);",
+    "exampleExplanation": "1. to_radians(90.0) يتم حسابها بالكامل بواسطة المترجم وتستبدل برقم ثابت في ملف الآلة التنفيذي.\n2. صفر وقت تنفيذ (Zero runtime overhead).",
+    "commonPitfalls": ["استدعاء دوال تقوم بعمليات I/O أو تخصيص ذاكرة غير مدعوم داخل دالة constexpr."],
+    "memoryHazards": "آمن تماماً حيث يتم التحقق من صحة الحسابات ومشاكل التجاوز في وقت الترجمة.",
+    "alternatives": "في C++20 استخدم consteval إذا كنت تريد إجبار الحساب في وقت الترجمة دون أي استدعاء وقت التشغيل.",
+    "docUrl": "https://en.cppreference.com/w/cpp/language/constexpr"
+  },
+  {
+    "name": "template",
+    "kind": "keyword",
+    "summary": "أساس البرمجة العامة (Generic Programming) في C++ لكتابة دوال وأصناف تعمل مع أي نوع بيانات",
+    "explanation": "يخبر المترجم بإنشاء قالب برمجي يقوم المترجم بتوليد نسخ مخصصة منه (Instantiation) لكل نوع بيانات يستخدم معه دون كتابة كود مكرر.",
+    "whenToUse": "عند بناء هياكل بيانات أو خوارزميات صالحة لعدة أنواع مثل القوائم، الأشجار، وخوارزميات الفرز والبحث.",
+    "syntax": "template <typename T>\nT max_value(T a, T b) { return (a > b) ? a : b; }",
+    "example": "template <typename T>\nclass Buffer {\nprivate:\n    T data[64];\npublic:\n    void set(size_t index, const T& val) { data[index] = val; }\n};",
+    "exampleExplanation": "1. typename T: معامل النوع العام.\n2. يتم إنشاء كود مخصص عالي الأداء ومطابق تماماً للنوع المستخدم في وقت الترجمة.",
+    "commonPitfalls": [
+      "وضع تعريفات القوالب في ملفات .cpp منفصلة مما يؤدي إلى أخطاء في الربط (Linker Error LNK2019)؛ يجب وضع القوالب في ملفات الترويسة .hpp.",
+      "رسائل أخطاء المترجم الطويلة والمعقدة في حال عدم دعم النوع للعمليات المطلوبة."
+    ],
+    "memoryHazards": "قد يسبب تضخم حجم الكود التنفيذي (Code Bloat) في حال كثرة الأنواع المستخدمة.",
+    "alternatives": "في C++20، استخدم Concepts (مثل template <std::integral T>) لتقييد الأنواع وتوضيح رسائل الخطأ بدقة متناهية.",
+    "docUrl": "https://en.cppreference.com/w/cpp/language/templates"
+  },
+  {
+    "name": "concept",
+    "kind": "keyword (C++20)",
+    "summary": "يحدد قيوداً وقواعد معينة يجب أن يستوفيها نوع البيانات المستخدم في القالب (Template)",
+    "explanation": "ميزة ثورية في C++20 تحل محل SFINAE المعقدة. تتيح للمبرمج فحص خصائص النوع (مثل كونه قابلاً للنسخ أو كونه عدداً صحيحاً) في وقت الترجمة مع إنتاج رسائل خطأ واضحة ومفهومة.",
+    "whenToUse": "دائماً عند كتابة قوالب Templates في C++20 لتقييد الأنواع ومنع استخدام أنواع غير ملائمة.",
+    "syntax": "template<typename T>\nconcept Numeric = std::is_arithmetic_v<T>;",
+    "example": "#include <concepts>\n\ntemplate <std::integral T>\nT gcd(T a, T b) {\n    while (b != 0) {\n        T temp = b;\n        b = a % b;\n        a = temp;\n    }\n    return a;\n}",
+    "exampleExplanation": "1. std::integral T يقيد الدالة للأعداد الصحيحة فقط.\n2. محاولة تمرير double أو string ستعطي رسالة خطأ مباشرة وموجزة في سطر الاستدعاء.",
+    "commonPitfalls": ["نسيان تضمين مكتبة <concepts> القياسية."],
+    "memoryHazards": "لا توجد مخاطر ذاكرة؛ فحص أمان صارم في وقت الترجمة.",
+    "alternatives": "في الإصدارات السابقة (C++14/17)، كان المبرمجون يستخدمون std::enable_if_t المعقدة.",
+    "docUrl": "https://en.cppreference.com/w/cpp/language/constraints"
+  }
+]

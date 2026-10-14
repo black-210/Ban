@@ -1,0 +1,161 @@
+{
+  "name": "codementor-native",
+  "displayName": "CodeMentor - C, C++ & Rust Assistant",
+  "description": "Interactive mentor-style IntelliSense, memory leak analysis, hover teacher cards, and real-time quick fixes for C, C++, and Rust.",
+  "version": "1.0.0",
+  "publisher": "codementor",
+  "author": {
+    "name": "CodeMentor Team"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codementor/codementor-native.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Snippets",
+    "Education"
+  ],
+  "keywords": [
+    "c",
+    "cpp",
+    "c++",
+    "rust",
+    "intellisense",
+    "memory-leak",
+    "raii",
+    "mentor",
+    "pedagogical"
+  ],
+  "activationEvents": [
+    "onLanguage:c",
+    "onLanguage:cpp",
+    "onLanguage:rust"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "c",
+        "aliases": ["C", "c"],
+        "extensions": [".c", ".h"]
+      },
+      {
+        "id": "cpp",
+        "aliases": ["C++", "cpp"],
+        "extensions": [".cpp", ".cc", ".cxx", ".hpp", ".hh", ".hxx", ".inl"]
+      },
+      {
+        "id": "rust",
+        "aliases": ["Rust", "rs"],
+        "extensions": [".rs"]
+      }
+    ],
+    "commands": [
+      {
+        "command": "codementor.setMentorMode",
+        "title": "CodeMentor: Switch Explanation Mode (Pedagogical / Concise / Advanced / Security)",
+        "category": "CodeMentor"
+      },
+      {
+        "command": "codementor.explainCurrentLine",
+        "title": "CodeMentor: Explain Current Line & Syntax",
+        "category": "CodeMentor"
+      },
+      {
+        "command": "codementor.analyzeMemoryHazards",
+        "title": "CodeMentor: Analyze File for Memory Hazards (Leaks, UAF, Buffer Overflows)",
+        "category": "CodeMentor"
+      },
+      {
+        "command": "codementor.showKnowledgeCard",
+        "title": "CodeMentor: Search Knowledge Base for Symbol",
+        "category": "CodeMentor"
+      },
+      {
+        "command": "codementor.showLspStatus",
+        "title": "CodeMentor: Check Clangd & rust-analyzer LSP Status",
+        "category": "CodeMentor"
+      }
+    ],
+    "configuration": {
+      "title": "CodeMentor",
+      "properties": {
+        "codementor.mentorMode": {
+          "type": "string",
+          "default": "pedagogical",
+          "enum": [
+            "pedagogical",
+            "concise",
+            "advanced",
+            "security"
+          ],
+          "enumDescriptions": [
+            "Full pedagogical breakdown with syntax, practical examples, and line-by-line explanation",
+            "Concise summary and syntax reference only",
+            "Deep low-level technical mechanics, cache and compiler optimization details",
+            "Security-focused audit emphasizing memory vulnerabilities and CWE mitigations"
+          ],
+          "description": "Style and depth of interactive explanations."
+        },
+        "codementor.enableMemoryAnalysis": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time background scanning for memory leaks, use-after-free, and unsafe hazards."
+        },
+        "codementor.confidenceThreshold": {
+          "type": "string",
+          "default": "all",
+          "enum": [
+            "all",
+            "warning",
+            "confirmed"
+          ],
+          "description": "Filter diagnostic issues by confidence level."
+        },
+        "codementor.enableQuickFixes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Provide automated quick fix code actions for memory and safety issues."
+        },
+        "codementor.preferExternalLsp": {
+          "type": "boolean",
+          "default": true,
+          "description": "Coordinate with clangd and rust-analyzer when installed in VS Code."
+        }
+      }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "codementor.explainCurrentLine",
+          "when": "editorLangId == c || editorLangId == cpp || editorLangId == rust",
+          "group": "CodeMentor@1"
+        },
+        {
+          "command": "codementor.analyzeMemoryHazards",
+          "when": "editorLangId == c || editorLangId == cpp || editorLangId == rust",
+          "group": "CodeMentor@2"
+        },
+        {
+          "command": "codementor.showKnowledgeCard",
+          "when": "editorLangId == c || editorLangId == cpp || editorLangId == rust",
+          "group": "CodeMentor@3"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "codementor.explainCurrentLine",
+        "key": "alt+m",
+        "mac": "cmd+m",
+        "when": "editorTextFocus"
+      }
+    ]
+  }
+}

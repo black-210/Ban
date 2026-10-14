@@ -1,0 +1,78 @@
+[
+  {
+    "name": "std::unique_ptr",
+    "signature": "template<class T, class Deleter = std::default_delete<T>> class unique_ptr;",
+    "header": "<memory>",
+    "category": "Smart Pointers (RAII)",
+    "summary": "مؤشر ذكي يمتلك كائناً في الكومة حصرياً ويدير عمره وتحريره تلقائياً",
+    "explanation": "يطبق std::unique_ptr مفهوم الملكية الحصرية (Exclusive Ownership). لا يمكن نسخه (Copy-disabled)، ولكن يمكن نقله (Move-enabled). عند خروج unique_ptr من نطاقه (Scope)، يقوم مستهلكه (Destructor) تلقائياً باستدعاء delete على الكائن المحجوز دون الحاجة لتدخل يدوي.",
+    "whenToUse": "هو الخيار الافتراضي الأول في C++ الحديثة لأي كائن ديناميكي على الكومة، بدلاً من المؤشرات الخام (Raw Pointers).",
+    "syntax": "auto ptr = std::make_unique<Type>(constructor_args...);",
+    "example": "#include <iostream>\n#include <memory>\n\nstruct Sensor {\n    Sensor() { std::cout << \"المستشعر بدأ العمل\\n\"; }\n    ~Sensor() { std::cout << \"المستشعر توقف وتحررت الذاكرة تلقائياً!\\n\"; }\n    void read() { std::cout << \"قراءة البيانات: 24.5C\\n\"; }\n};\n\nint main() {\n    // ملكية حصرية آمنة بنسبة 100% ضد تسرب الذاكرة\n    auto sensor = std::make_unique<Sensor>();\n    sensor->read();\n    \n    // نقل الملكية إلى مؤشر آخر\n    auto nextOwner = std::move(sensor);\n    // sensor الآن فارغ (nullptr)\n    return 0; // عند الخروج يتحرر Sensor تلقائياً!\n}",
+    "exampleExplanation": "1. std::make_unique<Sensor>(): ينشئ الكائن في خطوة واحدة آمنة من الاستثناءات (Exception Safe).\n2. std::move(sensor): نقل صريح للملكية، مما يمنع تعدد الملاك.\n3. عند انتهاء الدالة main، يتم تحرير الكائن وتدميره تلقائياً دون استدعاء delete أبداً.",
+    "commonPitfalls": [
+      "محاولة نسخ unique_ptr بواسطة عامل الإسناد = (ينتج خطأ ترجمة لأن النسخ محظور).",
+      "إنشاء كائن عبر new يدوياً وتمريره لمؤشرين منفصلين من نوع unique_ptr (يسبب Double Free).",
+      "استخدام المؤشر بعد عمل std::move عليه دون التحقق من nullptr."
+    ],
+    "memoryHazards": "يحمي من تسرب الذاكرة والتحرير المزدوج تماماً؛ فقط انتبه للوصول إليه بعد std::move.",
+    "alternatives": "إذا كان الكائن يحتاج إلى اشتراك في الملكية بين عدة جهات، استخدم std::shared_ptr و std::weak_ptr.",
+    "docUrl": "https://en.cppreference.com/w/cpp/memory/unique_ptr"
+  },
+  {
+    "name": "std::unordered_map",
+    "signature": "template<class Key, class T, class Hash = std::hash<Key>> class unordered_map;",
+    "header": "<unordered_map>",
+    "category": "Associative Containers",
+    "summary": "حاوية ترابطية تخزن أزواج (المفتاح، القيمة) باستخدام جدول تجزئة سريع (Hash Table)",
+    "explanation": "توفر حاوية std::unordered_map بحثاً وإدراجاً وحذفاً بمتوسط تعقيد زمني O(1). العناصر داخلها غير مرتبة، وتعتمد على دالة تجزئة (Hash Function) ومقارنة التساوي.",
+    "whenToUse": "عندما تحتاج إلى بحث سريع جداً بواسطة المفاتيح دون الحاجة إلى ترتيب العناصر تصاعدياً أو تنازلياً.",
+    "syntax": "std::unordered_map<KeyType, ValueType> map;",
+    "example": "#include <iostream>\n#include <unordered_map>\n#include <string>\n\nint main() {\n    std::unordered_map<std::string, int> userAges;\n    userAges[\"Ahmad\"] = 28;\n    userAges[\"Sara\"] = 24;\n    \n    auto it = userAges.find(\"Ahmad\");\n    if (it != userAges.end()) {\n        std::cout << \"عمر أحمد: \" << it->second << '\\n';\n    }\n    return 0;\n}",
+    "exampleExplanation": "1. userAges[\"Ahmad\"] = 28: إدراج أو تعديل سريع بالجدول.\n2. userAges.find(\"...\"): البحث الآمن دون إدراج مفتاح جديد بالخطأ مقارنة بمعامل [].\n3. it->second: الوصول إلى القيمة المرتبطة بالمفتاح.",
+    "commonPitfalls": [
+      "استخدام معامل [] للبحث عن عنصر غير موجود؛ حيث يقوم [] بإدراج عنصر جديد بالقيم الافتراضية بدلاً من الفحص!",
+      "استخدام أنواع مفاتيح مخصصة دون تزويد دالة التجزئة std::hash وعامل المقارنة operator==."
+    ],
+    "memoryHazards": "إعادة تخصيص السلال (Rehashing) قد تبطل مراجع المؤشرات في سيناريوهات الخيوط المتعددة.",
+    "alternatives": "استخدم std::map إذا كنت تحتاج إلى عناصر مرتبة بالترتيب الأبجدي أو المقارن (تعقيد O(log N)).",
+    "docUrl": "https://en.cppreference.com/w/cpp/container/unordered_map"
+  },
+  {
+    "name": "std::vector",
+    "signature": "template<class T, class Allocator = std::allocator<T>> class vector;",
+    "header": "<vector>",
+    "category": "Sequence Containers",
+    "summary": "مصفوفة متصلة ديناميكية تكبر وتدير ذاكرتها على الكومة تلقائياً وبأقصى كفاءة",
+    "explanation": "الحاوية المتسلسلة الأكثر استخداماً في C++. تخزن العناصر في ذاكرة متصلة تماماً (Contiguous Memory)، مما يوفر وصولاً فورياً O(1) بالفهرس واستفادة قصوى من ذاكرة الكاش في المعالج (CPU Cache locality).",
+    "whenToUse": "دائماً كخيار افتراضي لتخزين مجموعات العناصر المتغيرة الطول قبل التفكير في أي حاوية أخرى.",
+    "syntax": "std::vector<Type> vec;",
+    "example": "#include <iostream>\n#include <vector>\n\nint main() {\n    std::vector<int> numbers = {10, 20, 30};\n    numbers.push_back(40);\n    \n    for (const auto &n : numbers) {\n        std::cout << n << ' ';\n    }\n    return 0;\n}",
+    "exampleExplanation": "1. push_back(40): إضافة عنصر في نهاية المصفوفة مع إعادة الحجز التلقائي عند الحاجة.\n2. النطاق const auto &n: قراءة العناصر عبر مراجع ثابتة دون تكلفة نسخ.",
+    "commonPitfalls": [
+      "تجاوز الفهرس باستخدام []؛ حيث أن vec[i] لا تفحص الحدود في وضع الإصدار. استخدم vec.at(i) عندما تحتاج لفحص الحدود ورمي استثناء out_of_range.",
+      "إبطال المكررات (Iterator Invalidation): إضافة عناصر إلى vector قد تؤدي إلى إعادة حجز مساحة جديدة مما يجعل المكررات والمؤشرات القديمة معلقة (Dangling)!"
+    ],
+    "memoryHazards": "Dangling pointer / iterator بعد push_back أو resize.",
+    "alternatives": "استخدم std::array للمصفوفات ذات الحجم الثابت المعروف في وقت الترجمة لتجنب حجز الكومة.",
+    "docUrl": "https://en.cppreference.com/w/cpp/container/vector"
+  },
+  {
+    "name": "std::shared_ptr",
+    "signature": "template<class T> class shared_ptr;",
+    "header": "<memory>",
+    "category": "Smart Pointers (RAII)",
+    "summary": "مؤشر ذكي يتيح مشاركة ملكية كائن ديناميكي مع احتساب مراجع الاستخدام (Reference Counting)",
+    "explanation": "يحتفظ بكتلة تحكم (Control Block) تحتوي على عداد المراجع. في كل مرة يتم فيها نسخ shared_ptr يزداد العداد، وعند انتهاء أي نسخة ينقص العداد. عندما يصل العداد إلى صفر، يتم تحرير الكائن وكتلة التحكم تلقائياً.",
+    "whenToUse": "عندما تشترك عدة وحدات مستقلة في ملكية نفس الكائن ولا يمكن تحديد أيهما سينتهي أولاً.",
+    "syntax": "auto ptr = std::make_shared<Type>(args...);",
+    "example": "auto sp1 = std::make_shared<std::string>(\"Shared Resource\");\nauto sp2 = sp1; // عداد المراجع أصبح 2\nstd::cout << \"عدد المراجع: \" << sp1.use_count() << '\\n';",
+    "exampleExplanation": "1. std::make_shared يخصص الكائن وكتلة التحكم في كتلة ذاكرة واحدة، مما يوفر استدعاءات الذاكرة ويحسن الكاش.\n2. تحرير الكائن عند هبوط use_count إلى 0.",
+    "commonPitfalls": [
+      "الاعتمادية الدائرية (Circular Reference): إذا أشار كائنان إلى بعضهما بواسطة shared_ptr فلن يصل العداد إلى صفر أبداً وسيتسرب كلاهما! الحل: استخدام std::weak_ptr لكسر الحلقة."
+    ],
+    "memoryHazards": "Memory leak ناتج عن Circular references.",
+    "alternatives": "استخدم std::unique_ptr حيثما أمكن؛ فهو أسرع وخالٍ من تكلفة عداد المراجع ومزامنة الخيوط.",
+    "docUrl": "https://en.cppreference.com/w/cpp/memory/shared_ptr"
+  }
+]

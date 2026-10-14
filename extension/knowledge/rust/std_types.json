@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Option<T>",
+    "signature": "pub enum Option<T> { None, Some(T) }",
+    "header": "std::option::Option (In Prelude)",
+    "category": "Core Enums",
+    "summary": "نوع التعداد القياسي الذي يمثل قيمة اختيارية قد تكون موجودة (Some) أو معدومة (None)",
+    "explanation": "في لغة Rust لا يوجد مفهوم المؤشر الفارغ (null/NULL) الذي تسبب في 'خطأ المليار دولار'. بدلاً من ذلك، يُجبر المترجم المبرمج على تمثيل غياب القيمة صراحة باستخدام Enum يسمى Option<T>، ويجبره على معالجة كلا الاحتمالين عبر نمط المطابقة (Pattern Matching) مثل match أو if let.",
+    "whenToUse": "مع أي دالة قد تفشل في إيجاد عنصر (مثل البحث في جدول، أول عنصر في مصفوفة)، أو للحقول الاختيارية في الهياكل.",
+    "syntax": "let opt: Option<i32> = Some(42);\nlet empty: Option<i32> = None;",
+    "example": "fn divide(numerator: f64, denominator: f64) -> Option<f64> {\n    if denominator == 0.0 {\n        None\n    } else {\n        Some(numerator / denominator)\n    }\n}\n\nfn main() {\n    let result = divide(10.0, 2.0);\n    \n    // معالجة القيمة بأمان تام بدون خوف من Null Dereference\n    match result {\n        Some(val) => println!(\"النتيجة: {}\", val),\n        None => println!(\"تعذر الحساب: القسمة على صفر!\"),\n    }\n    \n    // طريقة مختصرة عبر if let\n    if let Some(v) = result {\n        println!(\"القيمة المحسوبة: {}\", v);\n    }\n}",
+    "exampleExplanation": "1. Option<f64>: نوع صريح يعبر عن احتمال غياب القيمة.\n2. Some(val): تغليف القيمة المحسوبة.\n3. match result: فحص شامل يضمن معالجة جميع الحالات دون استثناء.\n4. if let Some(v): نمط سريع لاستخراج القيمة عند الاهتمام بحالة الوجود فقط.",
+    "commonPitfalls": [
+      "استدعاء .unwrap() أو .expect() على Option قد يكون None، مما يؤدي إلى توقف البرنامج فورياً بسبب الذعر (Panic).",
+      "نسيان استخدام الدوال المساعدة مثل .map() أو .and_then() لتبسيط العمليات."
+    ],
+    "memoryHazards": "خالٍ تماماً من Null Pointer Dereference بفضل تصميم نظام الأنواع الصارم في Rust و Null Pointer Optimization (حيث يستغل المترجم حجم المؤشر الداخلي بحيث لا يشغل Option<&T> أي بايت إضافي).",
+    "alternatives": "إذا كانت العملية قد تفشل مع توفير سبب أو رسالة خطأ، استخدم Result<T, E> بدلاً من Option.",
+    "docUrl": "https://doc.rust-lang.org/std/option/enum.Option.html"
+  },
+  {
+    "name": "Result<T, E>",
+    "signature": "pub enum Result<T, E> { Ok(T), Err(E) }",
+    "header": "std::result::Result (In Prelude)",
+    "category": "Error Handling",
+    "summary": "نوع التعداد القياسي لمعالجة الأخطاء القابلة للاسترداد وتوضيح أسباب الفشل",
+    "explanation": "يمثل ناتج عملية قد تنجح وتعيد القيمة Ok(T)، أو تفشل مع تفاصيل الخطأ في Err(E). يدعم المعامل السحري '?' لنشر الأخطاء تصاعدياً (Error Propagation).",
+    "whenToUse": "لأي عملية I/O، اتصال شبكي، قراءة ملف، تحليل نصوص (Parsing)، أو عمليات قد تفشل لظروف بيئية.",
+    "syntax": "fn read_data() -> Result<String, std::io::Error>",
+    "example": "use std::fs::File;\nuse std::io::{self, Read};\n\nfn read_username() -> Result<String, io::Error> {\n    let mut file = File::open(\"username.txt\")?; // المعامل '?' ينشر الخطأ تلقائياً\n    let mut name = String::new();\n    file.read_to_string(&mut name)?;\n    Ok(name)\n}",
+    "exampleExplanation": "1. المعامل '?' يختبر Result: إذا كان Ok يستخرج القيمة، وإذا كان Err يقوم بالخروج المبكر من الدالة وإعادة الخطأ للمستدعي.\n2. خالٍ من أسلوب رمي الاستثناءات الخفية.",
+    "commonPitfalls": ["استخدام unwrap() في كود الإنتاج بدلاً من معالجة الخطأ أو استخدام '?'."],
+    "memoryHazards": "آمن وواضح تماماً في إدارة الموارد.",
+    "alternatives": "استخدم crates مثل anyhow و thiserror لتنظيم الأخطاء المخصصة في المشاريع الكبيرة.",
+    "docUrl": "https://doc.rust-lang.org/std/result/enum.Result.html"
+  },
+  {
+    "name": "Vec<T>",
+    "signature": "pub struct Vec<T> { ... }",
+    "header": "std::vec::Vec (In Prelude)",
+    "category": "Collections",
+    "summary": "مصفوفة ديناميكية نمتلكها حصرياً ومخصصة على الكومة وتدير حجمها وذاكرتها تلقائياً",
+    "explanation": "المجموعة الأكثر شيوعاً في Rust. تتكون داخلياً من 3 عناصر على المكدس: مؤشر إلى البيانات على الكومة، السعة (Capacity)، والطول الفعلي (Length). تطبق نمط RAII؛ عند خروج المتغير من النطاق يتم تفريغ الذاكرة فوراً.",
+    "whenToUse": "لتخزين قوائم العناصر المتغيرة الطول أو التجميعات الديناميكية.",
+    "syntax": "let mut items = Vec::new();\n// أو عبر ماكرو:\nlet list = vec![1, 2, 3];",
+    "example": "let mut names: Vec<String> = Vec::new();\nnames.push(String::from(\"Alice\"));\nnames.push(String::from(\"Bob\"));\n\nfor name in &names {\n    println!(\"Name: {}\", name);\n}",
+    "exampleExplanation": "1. &names يستعير المتجه للقراءة دون نقل ملكيته (No Move).\n2. push يضيف عنصراً ويعيد تخصيص السعة إذا لزم.",
+    "commonPitfalls": [
+      "محاولة تعديل المتجه داخل حلقة تكرار تستعير منه (يمنعها Borrow Checker لمنع إبطال المكررات).",
+      "الوصول بفهرس غير موجود عبر vec[index] يسبب Panic؛ استخدم vec.get(index) الذي يعيد Option<&T> بأمان."
+    ],
+    "memoryHazards": "محمي تماماً من Buffer Overflow عبر فحص الحدود، ومحمي من Use-After-Free بفضل نظام الملكية.",
+    "alternatives": "استخدم المصفوفات الثابتة [T; N] للأحجام الثابتة، أو VecDeque لطوابير الانتظار ذات الإدخال السريع من الطرفين.",
+    "docUrl": "https://doc.rust-lang.org/std/vec/struct.Vec.html"
+  },
+  {
+    "name": "Box<T>",
+    "signature": "pub struct Box<T> { ... }",
+    "header": "std::boxed::Box (In Prelude)",
+    "category": "Smart Pointers",
+    "summary": "المؤشر الذكي الأساسي لتخصيص كائن بملكية فردية على الكومة (Heap)",
+    "explanation": "يوفر Box تخصيصاً بسيطاً على الكومة. يتم تخزين المؤشر نفسه على المكدس بينما تكون البيانات على الكومة. عند خروج Box من النطاق، يحرر الكومة تلقائياً.",
+    "whenToUse": "عندما يكون لديك نوع بيانات ذات حجم غير محدد في وقت الترجمة (مثل الهياكل التكرارية Recursive Data Structures كالأشجار والقوائم المرتبطة)، أو عند نقل ملكية بيانات ضخمة دون نسخها.",
+    "syntax": "let boxed = Box::new(data);",
+    "example": "// تعريف عقدة شجرة تكرارية\nenum TreeNode {\n    Empty,\n    Node(i32, Box<TreeNode>, Box<TreeNode>),\n}\n\nlet tree = TreeNode::Node(\n    10,\n    Box::new(TreeNode::Empty),\n    Box::new(TreeNode::Empty),\n);",
+    "exampleExplanation": "1. بدون Box، لا يستطيع المترجم معرفة حجم TreeNode لأنه نوع تكراري لا نهائي الحجم.\n2. استخدام Box يمنح العقدة حجماً ثابتاً ومحدداً (حجم مؤشر واحد).",
+    "commonPitfalls": ["استخدام Box عندما لا تكون هناك حاجة للكائن على الكومة (المكدس أسرع)."],
+    "memoryHazards": "آمن تماماً من تسرب الذاكرة.",
+    "alternatives": "استخدم Rc<T> للملكية المشتركة في خيط واحد، أو Arc<T> للملكية المشتركة بين عدة خيوط معالجة.",
+    "docUrl": "https://doc.rust-lang.org/std/boxed/struct.Box.html"
+  }
+]

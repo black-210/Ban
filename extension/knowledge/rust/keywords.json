@@ -1,0 +1,47 @@
+[
+  {
+    "name": "let mut",
+    "kind": "keyword statement",
+    "summary": "تصريح عن متغير قابل للتعديل (Mutable Variable)",
+    "explanation": "في Rust، جميع المتغيرات تكون غير قابلة للتعديل افتراضياً (Immutable by default). إذا أردت تعديل قيمة المتغير أو إعادة الإسناد إليه أو تمريره كمرجع قابل للتعديل (&mut)، يجب عليك تصريحه صراحة بكلمة mut.",
+    "whenToUse": "فقط عندما تتغير قيمة المتغير بعد تعريفه (مثل عدادات الحلقات، أو تجميع البيانات).",
+    "syntax": "let mut variable_name = initial_value;",
+    "example": "let mut count = 0;\ncount += 1;\nprintln!(\"العداد الحالي: {}\", count);",
+    "exampleExplanation": "1. mut يسمح بتغيير القيمة.\n2. إذا صرحت بـ mut ولم تعدل المتغير لاحقاً، سيصدر المترجم تحذيراً (Warning) لمساعدتك في تنظيف الكود.",
+    "commonPitfalls": ["إضافة mut إلى كل متغير كعادة قادمة من لغات أخرى دون حاجة."],
+    "memoryHazards": "لا يسبب مخاطر، بل يمنع سباقات البيانات (Data Races) في وقت الترجمة.",
+    "alternatives": "استخدم التظليل (Shadowing) عبر let ثانية إذا كنت تريد تحويل نوع البيانات أو معالجة ثابتة.",
+    "docUrl": "https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html"
+  },
+  {
+    "name": "match",
+    "kind": "control flow",
+    "summary": "معامل مطابقة الأنماط القوي والشامل (Exhaustive Pattern Matching)",
+    "explanation": "يقارن قيمة مقابل سلسلة من الأنماط وينفذ الكود بناءً على النمط المطابق. السمة الفارقة هي الشمولية (Exhaustiveness): يرفض المترجم بناء البرنامج إذا لم تكن جميع الحالات مغطاة.",
+    "whenToUse": "مع تعدادات Enums (مثل Option و Result)، وتفكيك الهياكل، ومطابقة المجالات الرقمية.",
+    "syntax": "match value {\n    Pattern1 => expression1,\n    Pattern2 => expression2,\n    _ => default_expression,\n}",
+    "example": "enum Status {\n    Success(u32),\n    Pending,\n    Failed(String),\n}\n\nfn handle(s: Status) {\n    match s {\n        Status::Success(code) => println!(\"نجاح: {}\", code),\n        Status::Pending => println!(\"قيد المعالجة...\"),\n        Status::Failed(err) => eprintln!(\"خطأ: {}\", err),\n    }\n}",
+    "exampleExplanation": "1. تفكيك البيانات المرتبطة بكل حالة بدقة.\n2. المترجم يضمن عدم نسيان أي حالة إطلاقاً.",
+    "commonPitfalls": ["استخدام نمط التجاهل _ دون وعي مما قد يخفي حالات جديدة تضاف للـ Enum مستقبلاً."],
+    "memoryHazards": "آمن تماماً ويضمن خلو الكود من المسارات غير المعالجة.",
+    "alternatives": "استخدم if let إذا كنت مهتماً بحالة واحدة فقط وتريد تجاهل الباقي بإيجاز.",
+    "docUrl": "https://doc.rust-lang.org/book/ch06-02-match.html"
+  },
+  {
+    "name": "unsafe",
+    "kind": "keyword block",
+    "summary": "كتلة برمجية تمنح المبرمج صلاحية تجاوز بعض قيود نظام الأمان والمترجم بحذر شديد",
+    "explanation": "تخبر المترجم: 'أنا المبرمج أتحمل مسؤولية أمان الذاكرة في هذا الجزء'. لا تلغي فحص الاقتراض، ولكنها تسمح بخمس قوى خاصة: فك إشارة المؤشرات الخام (*const T / *mut T)، استدعاء دوال unsafe أو FFI للغات C/C++، تنفيذ Traits غير آمنة، تعديل متغيرات static mutable، والوصول إلى حقول union.",
+    "whenToUse": "فقط عند كتابة دوال نواة النظم، برامج تشغيل العتاد، أو استدعاء مكتبات C الخارجية عبر FFI، أو بناء هياكل بيانات منخفضة المستوى بعد إثبات صحتها.",
+    "syntax": "unsafe {\n    // كود يتطلب حذراً شديداً\n}",
+    "example": "let mut num = 5;\nlet r1 = &num as *const i32; // مؤشر خام\n\nunsafe {\n    println!(\"القيمة عبر المؤشر الخام: {}\", *r1);\n}",
+    "exampleExplanation": "1. إنشاء المؤشرات الخام آمن، ولكن فك إشارتها (*r1) يتطلب كتلة unsafe.\n2. يجب التأكد يدوياً من أن المؤشر صالح، غير فارغ، ومحاذى في الذاكرة.",
+    "commonPitfalls": [
+      "استخدام unsafe لتجنب إرضاء المترجم و Borrow Checker في كود تطبيقي عادي.",
+      "عدم توثيق شروط الأمان (Safety Invariants) قبل الكتلة."
+    ],
+    "memoryHazards": "كل مخاطر الذاكرة التي تمنعها Rust (Segfault, Use-After-Free, Data Race) قد تحدث داخل unsafe إذا أخطأ المبرمج!",
+    "alternatives": "استخدم دائماً البدائل الآمنة (Safe Abstractions) مثل Vec و Slice و Mutex.",
+    "docUrl": "https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html"
+  }
+]

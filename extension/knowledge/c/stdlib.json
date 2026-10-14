@@ -1,0 +1,149 @@
+[
+  {
+    "name": "malloc",
+    "signature": "void* malloc(size_t size)",
+    "header": "<stdlib.h>",
+    "category": "Memory Allocation",
+    "summary": "حجز مساحة ذاكرة ديناميكية غير مهيأة على الكومة (Heap)",
+    "explanation": "تقوم دالة malloc بطلب كتلة متصلة من الذاكرة بحجم محدد بالبايتات من نظام التشغيل. إذا نجح الطلب، تعيد مؤشراً من نوع void* يشير إلى أول بايت في الكتلة، وإذا فشل التخصيص (مثل نفاد الذاكرة)، تعيد NULL.",
+    "whenToUse": "عندما لا تعرف حجم البيانات مسبقاً في وقت الترجمة (Compile-time)، أو عندما تحتاج إلى تخصيص هياكل بيانات ديناميكية كالمصفوفات المتغيرة والقوائم المرتبطة التي تتجاوز حجم المكدس (Stack).",
+    "syntax": "type *ptr = (type *)malloc(count * sizeof(*ptr));",
+    "example": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    size_t count = 10;\n    int *numbers = malloc(count * sizeof(*numbers));\n    if (numbers == NULL) {\n        fprintf(stderr, \"فشل تخصيص الذاكرة!\\n\");\n        return 1;\n    }\n    \n    for (size_t i = 0; i < count; i++) {\n        numbers[i] = (int)(i * 10);\n    }\n    \n    free(numbers); // تحرير الذاكرة لمنع التسرب\n    numbers = NULL;\n    return 0;\n}",
+    "exampleExplanation": "1. int *numbers = malloc(...): تعريف مؤشر وتخصيص مساحة لعشرة أعداد صحيحة.\n2. sizeof(*numbers): حساب حجم العنصر الواحد بأمان بدلاً من كتابة sizeof(int) يدوياً.\n3. if (numbers == NULL): فحص إلزامي لمنع Null Pointer Dereference في حال نفاد الذاكرة.\n4. free(numbers): تحرير الذاكرة المحجوزة بعد الانتهاء منها لمنع تسرب الذاكرة (Memory Leak).\n5. numbers = NULL: تصفير المؤشر لمنع المؤشرات المعلقة (Dangling Pointer).",
+    "commonPitfalls": [
+      "نسيان فحص ناتج الدالة والتأكد من أنه لا يساوي NULL قبل استخدام المؤشر.",
+      "نسيان استدعاء free() مما يؤدي إلى تسرب الذاكرة (Memory Leak).",
+      "استخدام الذاكرة دون تهيئة (malloc لا تصفّر الذاكرة بل تترك قيماً عشوائية Garbage).",
+      "حساب الحجم خطأ دون استخدام sizeof."
+    ],
+    "memoryHazards": "Null Pointer Dereference إذا فشل الحجز، أو Memory Leak إذا لم يتم التحرير، أو Use-After-Free إذا استخدم المؤشر بعد free().",
+    "alternatives": "استخدم calloc إذا كنت تريد ذاكرة مصفّرة تلقائياً، أو استخدم حاويات C++ الذكية مثل std::vector أو std::unique_ptr عند التحول إلى C++.",
+    "docUrl": "https://en.cppreference.com/w/c/memory/malloc"
+  },
+  {
+    "name": "free",
+    "signature": "void free(void *ptr)",
+    "header": "<stdlib.h>",
+    "category": "Memory Deallocation",
+    "summary": "تحرير كتلة ذاكرة مخصصة ديناميكياً وإعادتها للنظام",
+    "explanation": "تقوم دالة free بإلغاء تخصيص مساحة الذاكرة التي تم حجزها سابقاً بواسطة malloc أو calloc أو realloc. بعد استدعاء free، يصبح المؤشر غير صالح للاستخدام (Dangling Pointer).",
+    "whenToUse": "استخدمها فور الانتهاء من استخدام البيانات المخصصة على الكومة، وقبل فقدان عنوان المؤشر أو الخروج من النطاق.",
+    "syntax": "free(ptr); ptr = NULL;",
+    "example": "char *buffer = malloc(256);\nif (buffer != NULL) {\n    // استخدام الذاكرة...\n    free(buffer);\n    buffer = NULL; // حماية من Use-After-Free\n}",
+    "exampleExplanation": "1. free(buffer): يحرر الكتلة المحجوزة لدى مدير الذاكرة.\n2. buffer = NULL: خطوة أمان حاسمة تمنع إعادة تحرير المؤشر بالخطأ (Double Free) أو القراءة منه.",
+    "commonPitfalls": [
+      "تحرير نفس المؤشر مرتين (Double Free Vulnerability).",
+      "استخدام المؤشر بعد تحريره (Use-After-Free).",
+      "تمرير مؤشر إلى متغير في المكدس (Stack) بدلاً من الكومة (Heap).",
+      "تمرير مؤشر تم تحريكه عن بداية الكتلة المحجوزة."
+    ],
+    "memoryHazards": "Use-After-Free يؤدي إلى سلوك غير معرف وثغرات أمنية خطيرة، و Double Free قد يفسد جداول إدارة الذاكرة في النظام.",
+    "alternatives": "في C++ الحديثة، تجنب الإدارة اليدوية واعتمد على نمط RAII عبر std::unique_ptr و std::make_unique.",
+    "docUrl": "https://en.cppreference.com/w/c/memory/free"
+  },
+  {
+    "name": "calloc",
+    "signature": "void* calloc(size_t num, size_t size)",
+    "header": "<stdlib.h>",
+    "category": "Memory Allocation",
+    "summary": "حجز مساحة لمصفوفة عناصر ديناميكية مع تصفير جميع بايتاتها إلى صفر",
+    "explanation": "تخصص مساحة لذاكرة تتسع لـ num من العناصر بحجم size لكل عنصر، وتهيء جميع البايتات بالقيمة 0. كما أنها تفحص داخلياً في المعايير الحديثة حدوث تجاوز لضرب الحجمين (Integer Overflow).",
+    "whenToUse": "عندما تحتاج إلى مصفوفة مخصصة على الكومة تبدأ جميع قيمها بأصفار نظيفة دون قراءة قيم عشوائية قديمة.",
+    "syntax": "type *arr = calloc(num_elements, sizeof(type));",
+    "example": "int *scores = calloc(50, sizeof(*scores));\nif (!scores) return -1;\n// scores[0] حتى scores[49] كلها 0 بأمان\nfree(scores);\nscores = NULL;",
+    "exampleExplanation": "1. calloc(50, sizeof(*scores)): تخصص وتصفّر 50 عدد صحيح.\n2. if (!scores): تحقق من نجاح التخصيص.\n3. free(scores): تحرير عند الانتهاء.",
+    "commonPitfalls": ["افتراض أن تصفير البايتات يمثل مؤشراً NULL أو عدداً عشرياً 0.0 في كل المعماريات الغريبة (وإن كان صحيحاً في x86/ARM)."],
+    "memoryHazards": "تسرب ذاكرة عند نسيان free() أو انهيار البرنامج عند نسيان فحص مؤشر النتيجة.",
+    "alternatives": "malloc متبوعة بـ memset، ولكن calloc أكثر كفاءة وأماناً من التجاوز العددي.",
+    "docUrl": "https://en.cppreference.com/w/c/memory/calloc"
+  },
+  {
+    "name": "realloc",
+    "signature": "void* realloc(void *ptr, size_t new_size)",
+    "header": "<stdlib.h>",
+    "category": "Memory Management",
+    "summary": "تغيير حجم كتلة ذاكرة مخصصة مسبقاً بالزيادة أو النقصان",
+    "explanation": "تقوم دالة realloc بتعديل حجم الكتلة المشار إليها بواسطة ptr. قد توسع الكتلة في مكانها الأصلي أو تنقل البيانات إلى عنوان جديد وتلغي التخصيص القديم تلقائياً.",
+    "whenToUse": "عند بناء مصفوفة ديناميكية تكبر أو تصغر حسب تدفق البيانات في وقت التشغيل (مثل قراءة أسطر غير محددة الطول).",
+    "syntax": "void *temp = realloc(ptr, new_size);\nif (temp != NULL) { ptr = temp; }",
+    "example": "int *arr = malloc(5 * sizeof(int));\n// نريد زيادة الحجم إلى 10\nint *temp = realloc(arr, 10 * sizeof(int));\nif (temp == NULL) {\n    // معالجة الفشل مع الاحتفاظ بالمؤشر الأصلي arr آمناً\n    free(arr);\n    return 1;\n}\narr = temp; // نجحت العملية\nfree(arr);",
+    "exampleExplanation": "النمط الصحيح: لا تكتب arr = realloc(arr, new_size) أبداً، لأن realloc إذا فشلت ستعيد NULL مما يؤدي لفقدان المؤشر الأصلي وتسرب الذاكرة القديمة بالكامل!",
+    "commonPitfalls": [
+      "كتابة ptr = realloc(ptr, new_size) مباشرة وفقدان المؤشر في حال الفشل.",
+      "استخدام المؤشر القديم بعد نجاح realloc (قد يكون تم نقله وتحرير القديم)."
+    ],
+    "memoryHazards": "Memory leak عند الكتابة فوق المؤشر الأصلي عند الفشل، أو Use-After-Free إذا استخدم المؤشر السابق.",
+    "alternatives": "في C++، استخدم std::vector الذي يدير نمو المصفوفة وتخصيصها وإعادة تحجيمها تلقائياً وبأمان كامل.",
+    "docUrl": "https://en.cppreference.com/w/c/memory/realloc"
+  },
+  {
+    "name": "printf",
+    "signature": "int printf(const char *format, ...)",
+    "header": "<stdio.h>",
+    "category": "I/O Formatting",
+    "summary": "طباعة نصوص وبيانات منسقة إلى مجرى الإخراج القياسي (stdout)",
+    "explanation": "تقوم بتحليل نص التنسيق واستبدال محددات التنسيق مثل %d و %s و %p بالقيم الممررة في المعاملات المتغيرة.",
+    "whenToUse": "لعرض النتائج للمستخدم أو طباعة رسائل الفحص في الطرفية.",
+    "syntax": "printf(\"Format text: %d, %s\\n\", number, string);",
+    "example": "int age = 25;\nconst char *name = \"Alex\";\nprintf(\"Name: %s | Age: %d | Addr: %p\\n\", name, age, (void*)&age);",
+    "exampleExplanation": "1. %s يطبع سلسلة نصية تنتهي بحرف null.\n2. %d يطبع عدداً صحيحاً بالإشارة.\n3. %p يطبع عنوان المؤشر بهيئة ست عشرية ويستلزم تحويل المؤشر إلى void*.",
+    "commonPitfalls": [
+      "عدم تطابق محدد التنسيق مع نوع المعامل الفعلي (مثل استخدام %s مع عدد صحيح)، مما يسبب سلوكاً غير معرف (Undefined Behavior).",
+      "طباعة نص مدخلات المستخدم مباشرة مثل printf(user_input) مما يسبب ثغرة أمنية مدمرة تسمى Format String Attack."
+    ],
+    "memoryHazards": "Undefined behavior وقراءة عشوائية للذاكرة، وثغرة Format String Attack تتيح للمهاجم قراءة أو تعديل الذاكرة.",
+    "alternatives": "في C، استخدم puts للطباعة البسيطة أو snprintf لإنشاء النصوص بأمان. في C++20 استخدم std::print أو std::format.",
+    "docUrl": "https://en.cppreference.com/w/c/io/fprintf"
+  },
+  {
+    "name": "snprintf",
+    "signature": "int snprintf(char *str, size_t size, const char *format, ...)",
+    "header": "<stdio.h>",
+    "category": "Safe String Formatting",
+    "summary": "تنسيق وكتابة نص داخل مصفوفة محارف مع تحديد حد أقصى للحجم لمنع تجاوز السعة",
+    "explanation": "تكتب على الأكثر size - 1 محرفاً ثم تضع المحرف الخاتم '\\0' في نهاية السلسلة، مما يضمن عدم حدوث Buffer Overflow.",
+    "whenToUse": "دائماً بدلاً من sprintf غير الآمنة لتنسيق وتجميع السلاسل النصية بأمان.",
+    "syntax": "snprintf(buffer, sizeof(buffer), \"format\", ...);",
+    "example": "char msg[64];\nint id = 404;\nsnprintf(msg, sizeof(msg), \"Error code: %d\", id);\nprintf(\"%s\\n\", msg);",
+    "exampleExplanation": "1. sizeof(msg) يضمن عدم تجاوز المصفوفة.\n2. تعيد الدالة عدد المحارف التي كان سيتم كتابتها لو كانت المساحة كافية، مما يسمح بفحص البتر Truncation.",
+    "commonPitfalls": ["عدم فحص ما إذا كان الناتج أكبر من أو يساوي الحجم لمعرفة إذا تم بتر النص."],
+    "memoryHazards": "آمنة ضد Buffer Overflow مقارنة بـ sprintf.",
+    "alternatives": "في C++ استخدم std::format أو std::string.",
+    "docUrl": "https://en.cppreference.com/w/c/io/snprintf"
+  },
+  {
+    "name": "memcpy",
+    "signature": "void* memcpy(void *dest, const void *src, size_t n)",
+    "header": "<string.h>",
+    "category": "Memory Operations",
+    "summary": "نسخ n بايت من موقع ذاكرة مصدري إلى موقع هدفي لا يتداخلان",
+    "explanation": "تنسخ كتل البايتات مباشرة بأقصى سرعة ممكنة دون فحص محتويات البايتات أو نهايات النصوص.",
+    "whenToUse": "لنسخ بنى البيانات (structs) أو المصفوفات الثابتة بسرعة عالية عندما تكون المنطقتان منفصلتين تماماً.",
+    "syntax": "memcpy(dest, src, count * sizeof(type));",
+    "example": "int source[5] = {1, 2, 3, 4, 5};\nint target[5];\nmemcpy(target, source, sizeof(source));",
+    "exampleExplanation": "1. sizeof(source) يحسب الحجم الإجمالي بالبايتات.\n2. dest و src منفصلان في المكدس لذا النسخ آمن.",
+    "commonPitfalls": [
+      "استخدام memcpy عندما تكون منطقتا الذاكرة متداخلتين (Overlapping)؛ في هذه الحالة يجب استخدام memmove حصراً.",
+      "تمرير حجم n أكبر من المساحة المتاحة في المصفوفة الهدف مما يسبب Buffer Overflow خطير."
+    ],
+    "memoryHazards": "Buffer Overflow وسلوك غير معرف في حال تداخل الذاكرة.",
+    "alternatives": "استخدم memmove عند احتمال تداخل الذاكرة.",
+    "docUrl": "https://en.cppreference.com/w/c/string/byte/memcpy"
+  },
+  {
+    "name": "strncpy",
+    "signature": "char* strncpy(char *dest, const char *src, size_t count)",
+    "header": "<string.h>",
+    "category": "String Operations",
+    "summary": "نسخ ما يصل إلى count محرفاً من سلسلة إلى أخرى",
+    "explanation": "تنسخ المحارف حتى تصل إلى count أو نهاية src. ملاحظة حرجة: إذا كان طول src أكبر من أو يساوي count، فلن تضع الدالة محرف النهاية '\\0' في dest!",
+    "whenToUse": "لنسخ سلاسل نصية مع حد أقصى للطول كبديل لـ strcpy غير الآمنة.",
+    "syntax": "strncpy(dest, src, sizeof(dest) - 1);\ndest[sizeof(dest) - 1] = '\\0';",
+    "example": "char dest[16];\nconst char *src = \"Very long string here\";\nstrncpy(dest, src, sizeof(dest) - 1);\ndest[sizeof(dest) - 1] = '\\0'; // ضمان وجود خاتم النص",
+    "exampleExplanation": "إضافة dest[sizeof(dest)-1] = '\\0' إجبارية لحماية البرنامج من قراءة الذاكرة العشوائية اللاحقة.",
+    "commonPitfalls": ["افتراض أن strncpy تضع دائماً محرف '\\0' في النهاية."],
+    "memoryHazards": "Out-of-bounds Read إذا مررت dest لـ printf أو strlen دون محرف الخاتم '\\0'.",
+    "alternatives": "استخدم snprintf(dest, sizeof(dest), \"%s\", src) فهي تضمن دائماً وضع '\\0'.",
+    "docUrl": "https://en.cppreference.com/w/c/string/byte/strncpy"
+  }
+]

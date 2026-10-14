@@ -1,0 +1,9 @@
+{
+  "fileName": "codementor-native-1.0.0.vsix",
+  "fileSize": 62120,
+  "sha256": "90b4632ddaa46f6bcb7e4a1e51121ba633341b427f99bb19491df968f02deaab",
+  "version": "1.0.0",
+  "publisher": "codementor",
+  "engine": "^1.85.0",
+  "buildDate": "2026-10-14"
+}

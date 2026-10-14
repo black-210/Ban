@@ -1,0 +1,26 @@
+[
+  {
+    "id": "raii-violation-raw-new",
+    "title": "استخدام new اليدوي وانتهاك نمط RAII",
+    "language": "cpp",
+    "severity": "Warning",
+    "explanation": "استخدام عامل new أو new[] لحجز كائنات على الكومة بدون تغليفها في كائن ذكي (Smart Pointer) يدير عمرها وفق مبدأ Resource Acquisition Is Initialization.",
+    "impact": "في حال حدوث استثناء (Exception) بين new و delete، سيتم تخطي استدعاء delete ويتسرب الكائن في الذاكرة للأبد.",
+    "detectionPattern": "Explicit call to 'new' or 'new[]' assigned to raw pointer.",
+    "howToFix": "استبدل new بـ std::make_unique أو std::make_shared أو استخدم حاويات STL القياسية مثل std::vector.",
+    "badCode": "void load() {\n    Widget *w = new Widget();\n    doSomething(); // إذا رمى استثناء، سيتسرب w!\n    delete w;\n}",
+    "goodCode": "void load() {\n    auto w = std::make_unique<Widget>();\n    doSomething(); // آمن 100%: عند رمي استثناء يتم استدعاء الهادم تلقائياً\n}"
+  },
+  {
+    "id": "dangling-reference",
+    "title": "مرجع معلق إلى متغير محلي (Dangling Reference)",
+    "language": "cpp",
+    "severity": "Critical",
+    "explanation": "إعادة مرجع (&) أو مؤشر (*) يشير إلى كائن محلي موجود على المكدس (Stack) تنتهي دورة حياته فور خروج الدالة.",
+    "impact": "سلوك غير معرف (Undefined Behavior). بمجرد خروج الدالة يتم إخلاء إطار المكدس، ويصبح المرجع يشير إلى بيانات فاسدة أو متغيرة عشوائياً.",
+    "detectionPattern": "Returning a reference to a local variable.",
+    "howToFix": "أعد الكائن بالقيمة (By Value) للاستفادة من RVO (Return Value Optimization) و Move Semantics.",
+    "badCode": "const std::string& getGreeting() {\n    std::string msg = \"Hello\";\n    return msg; // خطأ فادح: msg تدمر عند نهاية الدالة!\n}",
+    "goodCode": "std::string getGreeting() {\n    std::string msg = \"Hello\";\n    return msg; // آمن تماماً: نقل أو نسخ بلا تكلفة إضافية (RVO)\n}"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "name": "CodeMentor - Native VS Code Extension for C, C++ & Rust",
+  "description": "Interactive mentor-style IntelliSense, memory leak analysis, hover teacher cards, and real-time quick fixes for C, C++, and Rust in Visual Studio Code.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

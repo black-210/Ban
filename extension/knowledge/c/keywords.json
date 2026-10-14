@@ -1,0 +1,60 @@
+[
+  {
+    "name": "const",
+    "kind": "type qualifier",
+    "summary": "محدد لنوع البيانات يمنع تعديل القيمة بعد التهيئة ويحمي من التغيير غير المقصود",
+    "explanation": "يجعل المتغير أو البيانات المشار إليها بواسطة مؤشر للقراءة فقط (Read-Only). يساعد المترجم على تطبيق التحسينات ويمنع الأخطاء المنطقية وتعديل البيانات الثابتة في الذاكرة.",
+    "whenToUse": "مع معاملات الدوال التي تأخذ مؤشرات للقراءة فقط مثل const char *s، ومع الثوابت الحسابية والفيزيائية، ومع مصفوفات البحث الثابتة.",
+    "syntax": "const int MAX_USERS = 100;\nconst char *title = \"CodeMentor\";",
+    "example": "void print_message(const char *msg) {\n    // محاولة msg[0] = 'X'; ستنتج خطأ في الترجمة!\n    printf(\"%s\\n\", msg);\n}",
+    "exampleExplanation": "1. const char *msg يعني أن محتوى النص لا يمكن تعديله داخل الدالة.\n2. يوفر أماناً للذاكرة وضماناً للمستدعي بأن بياناته لن يتم إفسادها.",
+    "commonPitfalls": ["الخلط بين const int *ptr (بيانات ثابتة) و int *const ptr (مؤشر ثابت لا يتغير عنوانه)."],
+    "memoryHazards": "محاولة إزالة const بالقوة عبر Cast والتعديل على ذاكرة في قسم .rodata يسبب Segfault فوري.",
+    "alternatives": "في C99/C11 استخدم const مع restrict للحصول على تحسينات أداء عالية.",
+    "docUrl": "https://en.cppreference.com/w/c/language/const"
+  },
+  {
+    "name": "struct",
+    "kind": "user-defined type",
+    "summary": "بنية بيانات تجمّع عدة متغيرات من أنواع مختلفة في كتلة متصلة واحدة في الذاكرة",
+    "explanation": "تسمح بإنشاء نماذج كائنية مركبة في لغة C. يتم ترتيب الحقول بالتتابع في الذاكرة مع مراعاة محاذاة البايتات (Memory Alignment & Padding).",
+    "whenToUse": "لتمثيل الكيانات الواقعية مثل المستخدمين، الإحداثيات، الحزم الشبكية، أو أجهزة العتاد.",
+    "syntax": "struct Point {\n    int x;\n    int y;\n};\ntypedef struct Point Point;",
+    "example": "typedef struct {\n    int id;\n    double balance;\n} Account;\n\nAccount acc = {.id = 1, .balance = 500.50};\nprintf(\"ID: %d, Balance: %.2f\\n\", acc.id, acc.balance);",
+    "exampleExplanation": "1. استخدام Designated Initializers (.id = 1) يمنع الأخطاء عند تغيير ترتيب الحقول.\n2. الحقول متجاورة في الذاكرة.",
+    "commonPitfalls": ["مقارنة بنى struct باستخدام memcmp مباشرة، لأن مسافات الحشو (Padding bytes) قد تحتوي قيماً عشوائية."],
+    "memoryHazards": "عدم تهيئة كل الحقول قد يترك حقولاً بقيم عشوائية في الذاكرة.",
+    "alternatives": "في C++، استخدم class أو struct مع دوال ومحددات وصول ونمط RAII.",
+    "docUrl": "https://en.cppreference.com/w/c/language/struct"
+  },
+  {
+    "name": "sizeof",
+    "kind": "operator",
+    "summary": "معامل أحادي يُحسب في وقت الترجمة لمعرفة حجم النوع أو المتغير بالبايت",
+    "explanation": "يعيد عدداً من نوع size_t يمثل عدد البايتات التي يشغلها الكائن في الذاكرة. يتم حسابه أثناء الترجمة (باستثناء مصفوفات VLA في C99).",
+    "whenToUse": "دائماً عند تخصيص الذاكرة مع malloc، وعند نسخ الذاكرة مع memcpy، وعند حساب عدد عناصر المصفوفة.",
+    "syntax": "size_t size = sizeof(expression_or_type);",
+    "example": "int numbers[10];\nsize_t count = sizeof(numbers) / sizeof(numbers[0]); // 10 عناصر\nint *heap_arr = malloc(count * sizeof(*heap_arr));",
+    "exampleExplanation": "1. sizeof(numbers) يحسب الحجم الكلي للمصفوفة.\n2. sizeof(*heap_arr) يحسب حجم عنصر واحد من خلال المؤشر بأمان تام حتى لو تغير نوعه لاحقاً.",
+    "commonPitfalls": [
+      "تطبيق sizeof على مؤشر ممرر إلى دالة على أنه مصفوفة؛ حيث سيعيد حجم المؤشر (8 بايت في 64-bit) وليس حجم المصفوفة!"
+    ],
+    "memoryHazards": "حساب خاطئ لحجم الذاكرة يؤدي إلى Buffer Overflow أو اقتطاع البيانات.",
+    "alternatives": "في C++، استخدم std::size() أو container.size().",
+    "docUrl": "https://en.cppreference.com/w/c/language/sizeof"
+  },
+  {
+    "name": "volatile",
+    "kind": "type qualifier",
+    "summary": "يخبر المترجم بعدم إجراء أي تحسينات تلغي قراءة أو كتابة هذا المتغير في الذاكرة",
+    "explanation": "يمنع المترجم من تخزين قيمة المتغير في سجلات المعالج (Registers) أو إلغاء القراءات المكررة، مما يجبر المعالج على جلب القيمة من الذاكرة الحقيقية في كل مرة.",
+    "whenToUse": "مع مسجلات العتاد (Memory-Mapped I/O)، أو المتغيرات المعدلة داخل روتين مقاطعة (Interrupt Service Routine - ISR).",
+    "syntax": "volatile int flag = 0;",
+    "example": "extern volatile uint32_t *const STATUS_REG;\nwhile ((*STATUS_REG & 0x01) == 0) {\n    // انتظر جاهزية العتاد\n}",
+    "exampleExplanation": "بدون volatile، سيقرأ المترجم المسجل مرة واحدة ويحوّل الحلقة إلى حلقة لا نهائية (Infinite Loop) بافتراض أن القيمة لن تتغير داخل الحلقة.",
+    "commonPitfalls": ["الاعتقاد الخاطئ بأن volatile يضمن الذرية (Atomicity) أو التزامن الخيطي (Thread Safety) في البرمجة متعددة المهام."],
+    "memoryHazards": "فقدان التزامن في الأنظمة المضمنة وتجميد المعالج.",
+    "alternatives": "للخيوط المتعددة استخدم <stdatomic.h> في C11 أو std::atomic في C++.",
+    "docUrl": "https://en.cppreference.com/w/c/language/volatile"
+  }
+]

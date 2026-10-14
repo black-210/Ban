@@ -1,0 +1,50 @@
+[
+  {
+    "id": "memory-leak",
+    "title": "تسرب الذاكرة (Memory Leak)",
+    "language": "c",
+    "severity": "Error",
+    "explanation": "حجز مساحة ديناميكية على الكومة (Heap) باستخدام malloc أو calloc أو realloc دون تحريرها باستخدام free() قبل فقدان المؤشر أو انتهاء البرنامج.",
+    "impact": "استهلاك مستمر لذاكرة النظام (RAM) حتى نفاد الموارد وانهيار العملية (OOM Killer) أو تباطؤ النظام.",
+    "detectionPattern": "malloc/calloc allocated without corresponding free along execution paths.",
+    "howToFix": "استدعِ free(ptr); مع تصفير المؤشر ptr = NULL في نهاية الاستخدام وعند كل مسارات الخروج المبكر (return/break).",
+    "badCode": "void process() {\n    char *buf = malloc(1024);\n    if (error_occurred()) return; // تسرب: buf لم يتم تحريره هنا!\n    free(buf);\n}",
+    "goodCode": "void process() {\n    char *buf = malloc(1024);\n    if (!buf) return;\n    if (error_occurred()) {\n        free(buf);\n        return;\n    }\n    free(buf);\n}"
+  },
+  {
+    "id": "use-after-free",
+    "title": "استخدام المؤشر بعد التحرير (Use-After-Free)",
+    "language": "c",
+    "severity": "Critical",
+    "explanation": "محاولة القراءة من مؤشر أو الكتابة فيه بعد أن تم استدعاء free() على العنوان الذي يشير إليه.",
+    "impact": "سلوك غير معرّف (Undefined Behavior)، تلف في هياكل بيانات الذاكرة، أو استغلال أمني يسمح بتنفيذ كود اعتباطي (Arbitrary Code Execution).",
+    "detectionPattern": "Pointer dereference or assignment following free() on the same variable.",
+    "howToFix": "صفّر المؤشر فور تحريره: free(ptr); ptr = NULL; ولا تستخدم المؤشر بعدها.",
+    "badCode": "int *val = malloc(sizeof(int));\n*val = 42;\nfree(val);\nprintf(\"%d\\n\", *val); // خطير: Use-After-Free!",
+    "goodCode": "int *val = malloc(sizeof(int));\nif (!val) return;\n*val = 42;\nprintf(\"%d\\n\", *val);\nfree(val);\nval = NULL;"
+  },
+  {
+    "id": "null-dereference",
+    "title": "فك إشارة مؤشر فارغ (Null Pointer Dereference)",
+    "language": "c",
+    "severity": "Error",
+    "explanation": "الوصول إلى القيمة المشار إليها بواسطة مؤشر قيمته NULL دون التحقق المسبق من صحته.",
+    "impact": "انهيار فوري للبرنامج مع إشارة خطأ التجزئة (Segmentation Fault / SIGSEGV).",
+    "detectionPattern": "Dereferencing pointer returned by malloc/fopen without NULL check.",
+    "howToFix": "أضف فحصاً صريحاً if (ptr == NULL) لمعالجة حالة الفشل قبل القراءة أو الكتابة.",
+    "badCode": "FILE *f = fopen(\"data.txt\", \"r\");\nchar ch = fgetc(f); // إذا كان f يساوي NULL سينهار البرنامج فوراً!",
+    "goodCode": "FILE *f = fopen(\"data.txt\", \"r\");\nif (f == NULL) {\n    perror(\"تعذر فتح الملف\");\n    return;\n}\nchar ch = fgetc(f);\nfclose(f);"
+  },
+  {
+    "id": "buffer-overflow",
+    "title": "تجاوز سعة المخزن المؤقت (Buffer Overflow)",
+    "language": "c",
+    "severity": "Critical",
+    "explanation": "كتابة بيانات تتجاوز الحدود المخصصة للمصفوفة في الذاكرة، إما بسبب دوال غير آمنة مثل strcpy و gets أو بسبب فهارس مصفوفة خاطئة.",
+    "impact": "إفساد المتغيرات المجاورة في المكدس، الكتابة فوق عنوان العودة (Return Address)، واختراق أمني شهير لتجاوز المكدس (Stack Smashing).",
+    "detectionPattern": "Usage of strcpy, gets, sprintf or array index >= length.",
+    "howToFix": "استبدل الدوال غير الآمنة بـ snprintf أو strncpy، وتحقق دائماً من أن الفهرس أقل من سعة المصفوفة.",
+    "badCode": "char buffer[16];\nstrcpy(buffer, user_input); // خطير إذا كان النص أطول من 15 محرف!",
+    "goodCode": "char buffer[16];\nsnprintf(buffer, sizeof(buffer), \"%s\", user_input);"
+  }
+]

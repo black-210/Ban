@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ownership-move-violation",
+    "title": "استخدام القيمة بعد نقل الملكية (Use After Move)",
+    "language": "rust",
+    "severity": "Error",
+    "explanation": "في Rust، تخصيص قيمة إلى متغير آخر أو تمريرها لدالة ينقل ملكيتها (Move Semantics) إذا كان نوعها لا ينفذ سمة Copy. محاولة استخدام المتغير القديم بعدها غير مسموحة.",
+    "impact": "يمنعه المترجم (Borrow Checker) لحماية الذاكرة من التحرير المزدوج (Double Free) عند خروج المتغيرين من النطاق.",
+    "detectionPattern": "Accessing a moved variable that does not implement Copy.",
+    "howToFix": "إما استعارة القيمة عبر مرجع (&s)، أو استنساخها صراحة عبر .clone() إذا كان النسخ مقصوداً.",
+    "badCode": "let s1 = String::from(\"hello\");\nlet s2 = s1; // نُقلت الملكية إلى s2\nprintln!(\"{}\", s1); // خطأ في المترجم: use of moved value: `s1`",
+    "goodCode": "let s1 = String::from(\"hello\");\nlet s2 = &s1; // استعارة غير قابلة للتعديل بدلاً من النقل\nprintln!(\"s1: {}, s2: {}\", s1, s2);"
+  },
+  {
+    "id": "unnecessary-unsafe",
+    "title": "استخدام غير مبرر لكتلة unsafe (Unnecessary Unsafe Block)",
+    "language": "rust",
+    "severity": "Warning",
+    "explanation": "استخدام كتلة unsafe لعمليات تتوفر لها بدائل آمنة قياسية في مكتبة Rust القياسية، مثل قراءة فهرس مصفوفة أو إجراء عمليات حسابية.",
+    "impact": "إلغاء ضمانات الأمان والموثوقية التي تقدمها Rust وزيادة مخاطر الثغرات البرمجية وصعوبة تدقيق الكود.",
+    "detectionPattern": "Unsafe block without raw pointer deref, FFI, or unsafe trait.",
+    "howToFix": "احذف كتلة unsafe واعتمد على التوابع الآمنة مثل slice.get(i) أو iterators.",
+    "badCode": "let list = vec![1, 2, 3];\nlet item = unsafe { *list.as_ptr().add(1) }; // غير آمن وغير مبرر!",
+    "goodCode": "let list = vec![1, 2, 3];\nif let Some(item) = list.get(1) {\n    println!(\"العنصر: {}\", item);\n}"
+  }
+]
